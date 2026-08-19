@@ -8834,7 +8834,16 @@ async function openComprobanteModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
     
-    // 🔽 CERRAR CUALQUIER OTRO MODAL PRIMERO
+    // 🔽 VERIFICAR QUE EL MODAL EXISTE EN EL DOM
+    const modal = document.getElementById('comprobanteModal');
+    if (!modal) {
+        console.error('❌ ERROR CRÍTICO: #comprobanteModal NO EXISTE en el DOM');
+        showToast('Error: El modal de comprobantes no está disponible. Revisa que factura_modal.html esté incluido.', 'error');
+        return;
+    }
+    console.log('✅ Modal encontrado en el DOM:', modal);
+    
+    // Cerrar otros modales
     const otrosModales = document.querySelectorAll('.modal-bg.show');
     otrosModales.forEach(m => {
         if (m.id !== 'comprobanteModal') {
@@ -8843,21 +8852,13 @@ async function openComprobanteModal(id = null) {
         }
     });
     
-    // 1. Verificar que el modal existe
-    const modal = document.getElementById('comprobanteModal');
-    if (!modal) {
-        console.error('❌ #comprobanteModal no encontrado');
-        showToast('Error: Modal de comprobante no disponible', 'error');
-        return;
-    }
-    
-    // 2. Establecer título
+    // Establecer título
     const titleEl = document.getElementById('comprobanteModalTitle');
     if (titleEl) {
         titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nueva factura / Boleta';
     }
     
-    // 3. Verificar que el formulario existe
+    // Verificar formulario
     const formContainer = document.getElementById('comprobanteForm');
     if (!formContainer) {
         console.error('❌ #comprobanteForm no encontrado');
@@ -8865,7 +8866,7 @@ async function openComprobanteModal(id = null) {
         return;
     }
     
-    // 4. Cargar datos necesarios
+    // Cargar datos necesarios
     try {
         if (!guiasData || guiasData.length === 0) {
             console.log('🔄 Cargando guías...');
@@ -8879,7 +8880,7 @@ async function openComprobanteModal(id = null) {
         console.warn('⚠️ Error cargando datos:', error);
     }
     
-    // 5. Generar opciones para selects
+    // Generar opciones para selects
     const cotOptions = (cotizacionesData || []).map(q => 
         `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
     ).join('');
@@ -8893,7 +8894,7 @@ async function openComprobanteModal(id = null) {
         `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
     ).join('');
     
-    // 6. Renderizar el formulario
+    // Renderizar formulario
     formContainer.innerHTML = `
         <div class="ficha-section">
             <div class="ficha-section-title">🧾 Documentos vinculados</div>
@@ -8986,60 +8987,52 @@ async function openComprobanteModal(id = null) {
         </div>
     `;
     
-    // 7. Si es edición, cargar datos
+    // Si es edición, cargar datos
     if (isEdit) {
         setTimeout(() => cargarComprobanteParaEditar(id), 100);
     }
     
-    // 8. Mostrar modal - FORZADO CON CSS INLINE - z-index MÁXIMO
+    // 🔽 FORZAR VISIBILIDAD DEL MODAL 🔽
     modal.classList.add('show');
     
-    // 🔥 FORZAR VISIBILIDAD CON CSS INLINE - z-index MÁXIMO
-    modal.style.cssText = `
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: 999999 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: rgba(15, 23, 42, 0.8) !important;
-        backdrop-filter: blur(6px) !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        padding: 20px !important;
-        overflow: auto !important;
-    `;
-    
-    // 🔽 🔽 🔽 FORZAR VISIBILIDAD INMEDIATA 🔽 🔽 🔽
+    // Resetear cualquier estilo previo y forzar visibilidad
+    modal.style.cssText = '';
     modal.style.display = 'flex';
     modal.style.visibility = 'visible';
     modal.style.opacity = '1';
+    modal.style.zIndex = '999999';
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(15, 23, 42, 0.8)';
+    modal.style.backdropFilter = 'blur(6px)';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.padding = '20px';
+    modal.style.overflow = 'auto';
     
-    // Asegurar que el modal-box sea visible
+    // Forzar visibilidad del modal-box
     const box = modal.querySelector('.modal-box');
     if (box) {
-        box.style.cssText = `
-            position: relative !important;
-            z-index: 999999 !important;
-            width: min(1100px, 96vw) !important;
-            max-height: 95vh !important;
-            background: #FFFFFF !important;
-            border-radius: 16px !important;
-            overflow: hidden !important;
-            box-shadow: 0 30px 80px rgba(15,23,42,.45) !important;
-            display: flex !important;
-            flex-direction: column !important;
-            animation: modalIn 0.3s ease-out !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        `;
+        box.style.display = 'flex';
+        box.style.visibility = 'visible';
+        box.style.opacity = '1';
+        box.style.flexDirection = 'column';
+        box.style.width = 'min(1100px, 96vw)';
+        box.style.maxHeight = '95vh';
+        box.style.background = '#FFFFFF';
+        box.style.borderRadius = '16px';
+        box.style.overflow = 'hidden';
+        box.style.boxShadow = '0 30px 80px rgba(15,23,42,.45)';
     }
     
-    // También asegurar que el body no bloquee el modal
     document.body.style.overflow = 'hidden';
     
     console.log('✅ Modal de comprobante abierto correctamente');
 }
+
+
+
+
 
 async function cargarComprobanteParaEditar(id) {
     try {
