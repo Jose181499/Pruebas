@@ -8834,6 +8834,15 @@ async function openComprobanteModal(id = null) {
     editingId = id;
     const isEdit = id !== null;
     
+    // 🔽 CERRAR CUALQUIER OTRO MODAL PRIMERO
+    const otrosModales = document.querySelectorAll('.modal-bg.show');
+    otrosModales.forEach(m => {
+        if (m.id !== 'comprobanteModal') {
+            m.classList.remove('show');
+            m.style.cssText = '';
+        }
+    });
+    
     // 1. Verificar que el modal existe
     const modal = document.getElementById('comprobanteModal');
     if (!modal) {
@@ -8845,7 +8854,7 @@ async function openComprobanteModal(id = null) {
     // 2. Establecer título
     const titleEl = document.getElementById('comprobanteModalTitle');
     if (titleEl) {
-        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nuevo comprobante';
+        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nueva factura / Boleta';
     }
     
     // 3. Verificar que el formulario existe
@@ -8982,10 +8991,10 @@ async function openComprobanteModal(id = null) {
         setTimeout(() => cargarComprobanteParaEditar(id), 100);
     }
     
-    // 8. Mostrar modal - FORZADO CON CSS INLINE
+    // 8. Mostrar modal - FORZADO CON CSS INLINE - z-index MÁS ALTO
     modal.classList.add('show');
     
-    // 🔥 FORZAR VISIBILIDAD CON CSS INLINE
+    // 🔥 FORZAR VISIBILIDAD CON CSS INLINE - z-index MÁXIMO
     modal.style.cssText = `
         position: fixed !important;
         inset: 0 !important;
@@ -8993,7 +9002,7 @@ async function openComprobanteModal(id = null) {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        background: rgba(15, 23, 42, 0.7) !important;
+        background: rgba(15, 23, 42, 0.8) !important;
         backdrop-filter: blur(6px) !important;
         visibility: visible !important;
         opacity: 1 !important;
@@ -9012,7 +9021,7 @@ async function openComprobanteModal(id = null) {
             background: #FFFFFF !important;
             border-radius: 16px !important;
             overflow: hidden !important;
-            box-shadow: 0 30px 80px rgba(15,23,42,.35) !important;
+            box-shadow: 0 30px 80px rgba(15,23,42,.45) !important;
             display: flex !important;
             flex-direction: column !important;
             animation: modalIn 0.3s ease-out !important;
