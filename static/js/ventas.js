@@ -8485,76 +8485,7 @@ function openGuiaModal(id = null) {
             animation: modalIn 0.3s ease-out !important;
         `;
     }
-    modal.classList.add('show');
-    modal.style.cssText = `
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: 99999 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: rgba(15, 23, 42, 0.7) !important;
-        backdrop-filter: blur(6px) !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        padding: 20px !important;
-        overflow: auto !important;
-    `;
     
-    const box = modal.querySelector('.modal-box');
-    if (box) {
-        box.style.cssText = `
-            position: relative !important;
-            z-index: 99999 !important;
-            width: min(1400px, 98vw) !important;
-            max-height: 95vh !important;
-            background: #FFFFFF !important;
-            border-radius: 16px !important;
-            overflow: hidden !important;
-            box-shadow: 0 30px 80px rgba(15,23,42,.35) !important;
-            display: flex !important;
-            flex-direction: column !important;
-            animation: modalIn 0.3s ease-out !important;
-        `;
-    }
-    
-    // ============================================================
-    // 🔽 ESTO ES LO QUE FALTABA: forzar que head/body/foot respeten
-    //    el layout flex y que el footer NUNCA se recorte
-    // ============================================================
-    const guiaHead = modal.querySelector('.modal-head');
-    const guiaBody = document.getElementById('guiaForm');
-    const guiaFoot = document.getElementById('guiaModalFooter');
-    
-    if (guiaHead) {
-        guiaHead.style.flexShrink = '0';
-    }
-    
-    if (guiaBody) {
-        // Reemplaza el max-height fijo (calc(100vh - 180px)) que causaba
-        // que el contenido empujara al footer fuera del área visible.
-        guiaBody.style.cssText = `
-            flex: 1 1 auto;
-            min-height: 0;
-            overflow-y: auto;
-            padding: 10px 14px;
-            background: #F8FAFC;
-        `;
-    }
-    
-    if (guiaFoot) {
-        guiaFoot.style.cssText = `
-            flex-shrink: 0 !important;
-            display: flex !important;
-            padding: 6px 14px !important;
-            gap: 6px !important;
-            align-items: center !important;
-            justify-content: flex-end !important;
-            background: #FFFFFF !important;
-            border-top: 1px solid #E5E7EB !important;
-            flex-wrap: wrap !important;
-        `;
-    }
     
     if (isEdit) {
         setTimeout(() => cargarGuiaParaEditar(id), 300);
