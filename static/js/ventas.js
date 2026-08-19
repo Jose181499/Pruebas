@@ -8541,476 +8541,265 @@ function openGuiaModal(id = null) {
 // ============================================================
 // CARGAR GUÍA EXISTENTE PARA EDICIÓN
 // ============================================================
-function openGuiaModal(id = null) {
-    // ✅ CERRAR CUALQUIER OTRO MODAL ANTES DE ABRIR GUÍA
-    const otrosModales = document.querySelectorAll('.modal-bg.show');
-    otrosModales.forEach(m => {
-        if (m.id !== 'guiaModal') {
-            m.classList.remove('show');
-            m.style.display = 'none';
+async function cargarGuiaParaEditar(id) {
+    try {
+        console.log('📥 Cargando guía para editar ID:', id);
+        showToast('⏳ Cargando datos de la guía...', 'info');
+
+        const response = await apiFetch(`/ventas/api/guias/${id}`);
+        if (!response.success) {
+            showToast('Error al cargar guía: ' + (response.error || 'Desconocido'), 'error');
+            return;
         }
-    });
-    
-    console.log('📦 Abriendo modal de guía', { id });
-    editingId = id;
-    const isEdit = id !== null;
-    
-    // Verificar que el modal existe
-    const modal = document.getElementById('guiaModal');
-    if (!modal) {
-        console.error('❌ #guiaModal no encontrado');
-        showToast('Error: Modal de guía no disponible', 'error');
-        return;
-    }
-    
-    // ORIGEN FIJO - DATOS DEL REMITENTE
-    const ORIGEN_FIJO = {
-        ruc: '20602095704',
-        nombre: 'KCF CORPORACION SAC',
-        direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
-        ubigeo: '150139',
-        departamento: 'LIMA',
-        provincia: 'LIMA',
-        distrito: 'SAN MARTIN DE PORRES'
-    };
-    
-    // Establecer título
-    const titleEl = document.getElementById('guiaModalTitle');
-    if (titleEl) {
-        titleEl.textContent = isEdit ? '📦 Editar Guía de Remisión' : '📦 Nueva Guía de Remisión';
-    }
-    
-    const formContainer = document.getElementById('guiaForm');
-    if (!formContainer) {
-        console.error('❌ #guiaForm no encontrado');
-        showToast('Error: Formulario de guía no disponible', 'error');
-        return;
-    }
-    
-    // Inicializar fechas
-    const hoy = new Date().toISOString().split('T')[0];
-    
-    // Generar opciones de motivos
-    const motivos = ['VENTA', 'COMPRA', 'TRANSFERENCIA ENTRE ALMACENES', 'DEVOLUCIÓN', 'CONSIGNACIÓN', 'OTRO'];
-    const motivoOptions = motivos.map(m => 
-        `<option value="${m}" ${m === 'VENTA' ? 'selected' : ''}>${m}</option>`
-    ).join('');
-    
-    const modalidadOptions = `
-        <option value="PRIVADO" selected>🚛 Transporte Privado</option>
-        <option value="PUBLICO">🚚 Transporte Público</option>
-    `;
-    
-    // RENDERIZAR EL FORMULARIO DE GUÍA (sin productos inicialmente)
-    formContainer.innerHTML = `
-        <!-- FILA 1: REMITENTE Y DESTINATARIO -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            <!-- REMITENTE -->
-            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
-                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#2563EB; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="bi bi-building"></i> Remitente (Origen)</span>
-                    <small style="color:#64748B; font-weight:700; font-size:8px;">🔒 Fijo</small>
-                </div>
-                <div style="padding:6px 10px;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
-                            <input id="guiaRucRemitente" value="${ORIGEN_FIJO.ruc}" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cód. Anexo</label>
-                            <input id="guiaRemitenteAnexo" value="0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                    </div>
-                    <div class="form-field" style="margin-bottom:2px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
-                        <input id="guiaRemitenteNombre" value="${ORIGEN_FIJO.nombre}" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-                    </div>
-                    <div class="form-field" style="margin-bottom:2px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Partida</label>
-                        <input id="guiaOrigen" value="${ORIGEN_FIJO.direccion}" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
-                        <div class="form-field">
-                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
-                            <select id="guiaDeptoOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
-                                <option value="${ORIGEN_FIJO.departamento}" selected>${ORIGEN_FIJO.departamento}</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Provincia</label>
-                            <select id="guiaProvOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
-                                <option value="${ORIGEN_FIJO.provincia}" selected>${ORIGEN_FIJO.provincia}</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Distrito</label>
-                            <select id="guiaDistOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
-                                <option value="${ORIGEN_FIJO.distrito}" selected>${ORIGEN_FIJO.distrito}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="font-size:7px; color:#64748B; margin-top:2px;">
-                        <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoOrigenTexto">${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}</span>
-                        <input type="hidden" id="guiaUbigeoOrigen" value="${ORIGEN_FIJO.ubigeo}">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- DESTINATARIO -->
-            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
-                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#059669; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="bi bi-people-fill"></i> Destinatario (Cliente)</span>
-                    <small style="color:#64748B; font-weight:700; font-size:8px;">Buscar por RUC</small>
-                </div>
-                <div style="padding:6px 10px;">
-                    <div style="display:grid; grid-template-columns:1fr 60px; gap:4px; margin-bottom:2px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Buscar Cliente</label>
-                            <input id="guiaBuscarCliente" placeholder="Ingresa RUC" maxlength="11" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;" onkeydown="if(event.key==='Enter'){buscarClienteParaGuia();}">
-                        </div>
-                        <button onclick="buscarClienteParaGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer;">🔍</button>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
-                            <input id="guiaRuc" placeholder="RUC" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cód. Anexo</label>
-                            <input id="guiaDestAnexo" placeholder="0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                    </div>
-                    <div class="form-field" style="margin-bottom:2px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
-                        <input id="guiaCliente" placeholder="Razón social del cliente" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                    </div>
-                    <div class="form-field" style="margin-bottom:2px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Llegada</label>
-                        <input id="guiaDestino" placeholder="Dirección del cliente" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
-                        <div class="form-field">
-                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
-                            <select id="guiaDeptoDestino" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                                <option value="">Seleccione</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Provincia</label>
-                            <select id="guiaProvDestino" disabled style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                                <option value="">Primero Departamento</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Distrito</label>
-                            <select id="guiaDistDestino" disabled style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                                <option value="">Primero Provincia</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="font-size:7px; color:#64748B; margin-top:2px;">
-                        <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoDestinoTexto">Ninguno</span>
-                        <input type="hidden" id="guiaUbigeoDestino" value="">
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:4px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Orden Compra</label>
-                            <input id="guiaOrdenCompra" placeholder="OC-04705" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:8px; padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cotización</label>
-                            <input id="guiaCotizacion" placeholder="COT-2026-0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:8px; padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Factura</label>
-                            <input id="guiaFactura" placeholder="F001-123" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:8px; padding:0 6px;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- FILA 2: VEHÍCULO Y TRANSPORTISTA -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
-                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#EA580C; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="bi bi-truck"></i> Datos de Transporte</span>
-                    <small style="color:#64748B; font-weight:700; font-size:8px;">Obligatorio</small>
-                </div>
-                <div style="padding:6px 10px;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Modalidad</label>
-                            <select id="guiaModalidadTransporte" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:9px; padding:0 4px; background:#FFFFFF;" onchange="toggleTransportistaGuia()">
-                                ${modalidadOptions}
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Seleccionar Conductor</label>
-                            <div style="display:flex; gap:4px; align-items:center;">
-                                <select id="guiaSelectConductor" style="flex:1; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;" onchange="cargarConductorGuia(this.value)">
-                                    <option value="">-- Seleccione --</option>
-                                    <option value="personalizar" style="font-weight:600;color:#2563EB;">✏️ Personalizar</option>
-                                </select>
-                                <button onclick="limpiarConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#EF4444; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;" title="Limpiar campos del conductor">✕</button>
-                                <button onclick="openNuevoConductorGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 8px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer; white-space:nowrap;">➕ Nuevo</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Placa</label>
-                            <input id="guiaPlaca" placeholder="ABC-123" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px; text-transform:uppercase;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Licencia</label>
-                            <input id="guiaLicencia" placeholder="1234567890" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">DNI Conductor</label>
-                            <input id="guiaConductorDNI" placeholder="DNI" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Nombre Conductor</label>
-                            <input id="guiaConductorNombre" placeholder="Nombre completo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="ficha-section" id="guiaTransportistaCard" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; opacity:0.5;">
-                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#DC2626; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="bi bi-building"></i> Datos del Transportista (Público)</span>
-                    <small style="color:#64748B; font-weight:700; font-size:8px;">Solo para Público</small>
-                </div>
-                <div style="padding:6px 10px;">
-                    <div style="display:grid; grid-template-columns:1fr 60px; gap:4px; margin-bottom:2px;">
-                        <div class="form-field">
-                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC Transportista</label>
-                            <input id="guiaTransportistaRUC" placeholder="RUC empresa" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                        </div>
-                        <button onclick="buscarTransportistaGuia()" style="height:20px; border-radius:4px; font-size:8px; padding:0 6px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer;">🔍</button>
-                    </div>
-                    <div class="form-field" style="margin-bottom:2px;">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
-                        <input id="guiaTransportistaNombre" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-                    </div>
-                    <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección</label>
-                        <input id="guiaTransportistaDireccion" placeholder="Dirección del transportista" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                    </div>
-                    <div id="guiaMsgTransportePrivado" style="display:none; margin-top:4px; padding:4px 8px; background:#FFF7ED; border:1px solid #FDBA74; border-radius:4px; font-size:8px; color:#9A3412;">
-                        <i class="bi bi-info-circle"></i> En transporte privado no se requiere transportista.
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- FILA 3: TRASLADO -->
-        <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
-            <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#7C3AED; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                <span><i class="bi bi-file-text"></i> Datos del Traslado</span>
-                <small style="color:#64748B; font-weight:700; font-size:8px;">Campos SUNAT</small>
-            </div>
-            <div style="padding:6px 10px;">
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
-                    <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Motivo</label>
-                        <select id="guiaMotivo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                            ${motivoOptions}
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Emisión</label>
-                        <input id="guiaFechaEmision" type="date" value="${hoy}" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                    </div>
-                    <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Inicio</label>
-                        <input id="guiaFechaInicio" type="date" value="${hoy}" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                    </div>
-                    <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Bultos</label>
-                        <input id="guiaBultos" type="number" value="1" min="0" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                    </div>
-                </div>
-                
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:2px;">
-                    <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto</label>
-                        <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                            <option value="">Cargando...</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Peso Bruto Total</label>
-                        <input id="guiaPeso" type="number" step="0.01" value="0.00" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-                    </div>
-                </div>
-                
-                <div class="form-field" style="margin-top:4px;">
-                    <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Observaciones</label>
-                    <textarea id="guiaObservaciones" rows="1" placeholder="Notas adicionales..." style="width:100%; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:4px 6px; resize:vertical; min-height:24px;"></textarea>
-                </div>
-            </div>
-        </div>
-        
-        <!-- SECCIÓN DE PRODUCTOS -->
-        <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
-            <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#059669; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-                <span><i class="bi bi-box-seam"></i> Productos</span>
-                <div style="display:flex; gap:4px; align-items:center;">
-                    <button onclick="openProductSelectorGuia()" style="height:20px; padding:0 10px; font-size:8px; border-radius:4px; background:#8B5CF6; color:#fff; border:0; font-weight:800; cursor:pointer;">📋 Agregar productos</button>
-                    <button onclick="agregarFilaProductoGuia()" style="height:20px; padding:0 8px; font-size:8px; border-radius:4px; background:#2563EB; color:#fff; border:0; font-weight:800; cursor:pointer;">+ Agregar fila</button>
-                </div>
-            </div>
-            <div style="overflow-x:auto; padding:4px 6px;">
-                <table style="width:100%; border-collapse:collapse; font-size:9px; min-width:650px;">
-                    <thead>
-                        <tr>
-                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:35px;">#</th>
-                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:80px;">Código</th>
-                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center;">Descripción</th>
-                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Unidad</th>
-                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:60px;">Cantidad</th>
-                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:70px;">Peso U.</th>
-                            <th style="padding:2px 4px; background:#FFF1F2; color:#7F1D1D; border:1px solid #FCA5A5; text-align:center; width:35px;">✕</th>
-                        </tr>
-                    </thead>
-                    <tbody id="guiaProductosBody">
-                        <!-- Productos se agregan aquí -->
-                    </tbody>
-                </table>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 10px; background:#F8FAFC; border-top:1px solid #E2E8F0; font-size:9px; font-weight:800; color:#475569;">
-                <span id="guiaProductosCount">0 productos</span>
-                <span>Peso total: <span id="guiaPesoTotalDisplay">0.00</span> kg</span>
-            </div>
-        </div>
-    `;
-    
-    // ============================================================
-    // CONFIGURAR UBIGEOS DE DESTINO
-    // ============================================================
-    llenarDepartamentosGuia('guiaDeptoDestino');
-    configurarUbigeoGuia('Destino');
-    
-    // Preseleccionar Lima para destino
-    setTimeout(() => {
-        const deptoDestino = document.getElementById('guiaDeptoDestino');
-        if (deptoDestino) {
-            deptoDestino.value = 'LIMA';
-            deptoDestino.dispatchEvent(new Event('change'));
-            setTimeout(() => {
-                const provDestino = document.getElementById('guiaProvDestino');
-                if (provDestino) {
-                    provDestino.value = 'LIMA';
-                    provDestino.dispatchEvent(new Event('change'));
-                    setTimeout(() => {
-                        const distDestino = document.getElementById('guiaDistDestino');
-                        if (distDestino) {
-                            distDestino.value = 'SAN MARTIN DE PORRES';
-                            distDestino.dispatchEvent(new Event('change'));
-                        }
-                    }, 50);
+
+        const g = response.data;
+        console.log('📦 Datos de guía cargados:', g);
+
+        // ============================================================
+        // ORIGEN FIJO - SIEMPRE SOBREESCRIBIR
+        // ============================================================
+        const ORIGEN_FIJO = {
+            ruc: '20602095704',
+            nombre: 'KCF CORPORACION SAC',
+            direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+            ubigeo: '150139',
+            departamento: 'LIMA',
+            provincia: 'LIMA',
+            distrito: 'SAN MARTIN DE PORRES'
+        };
+
+        // ============================================================
+        // 🔒 setSelectValue BLINDADO
+        // Funciona tanto para <select> como para <input>.
+        // Si el elemento no es <select>, actúa como setValue.
+        // Así este error NO vuelve a ocurrir sin importar el id que se le pase.
+        // ============================================================
+        const setSelectValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el || value === undefined || value === null) return;
+
+            // Si no es un <select>, tratarlo como input normal
+            if (el.tagName !== 'SELECT') {
+                el.value = value;
+                return;
+            }
+
+            const val = String(value).trim();
+            let found = false;
+            for (const opt of el.options) {
+                if (opt.value === val) { opt.selected = true; found = true; break; }
+            }
+            if (!found) {
+                for (const opt of el.options) {
+                    if (opt.value.toLowerCase() === val.toLowerCase()) { opt.selected = true; found = true; break; }
                 }
-            }, 50);
+            }
+        };
+
+        const setValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value ?? '';
+        };
+
+        // ============================================================
+        // CAMPOS BÁSICOS
+        // ============================================================
+        setValue('guiaSerie', g.serie);
+        setValue('guiaNumero', g.numero);
+        setSelectValue('guiaEstado', g.estado_sunat || g.estado);
+        setValue('guiaCliente', g.destinatario_nombre);
+        setValue('guiaRuc', g.ruc_destinatario);
+        setSelectValue('guiaOrigen', ORIGEN_FIJO.direccion);
+        setValue('guiaDestino', g.destinatario_direccion);
+        setSelectValue('guiaMotivo', g.motivo_traslado);
+        setValue('guiaObs', g.observaciones);
+
+
+        // ============================================================
+        // PARCHE PARA cargarGuiaParaEditar(id)
+        // Agregar este bloque DESPUÉS de la línea:
+        //
+        //     setValue('guiaObs', g.observaciones);
+        //
+        // y ANTES de la sección "SOBREESCRIBIR ORIGEN CON DATOS FIJOS"
+        // ============================================================
+
+        // ---- MODALIDAD DE TRANSPORTE (activa/desactiva el bloque transportista) ----
+        setSelectValue('guiaModalidadTransporte', g.modalidad_transporte || 'PRIVADO');
+        if (typeof toggleTransportistaGuia === 'function') {
+            setTimeout(() => toggleTransportistaGuia(), 50);
         }
-    }, 100);
-    
-    // ============================================================
-    // CARGAR UNIDADES DE MEDIDA
-    // ============================================================
-    cargarUnidadesDeMedidaGuia();
-    
-    // ============================================================
-    // CARGAR CONDUCTORES
-    // ============================================================
-    cargarConductoresGuia();
-    toggleTransportistaGuia();
-    
-    // ============================================================
-    // AGREGAR FILA DE PRODUCTO
-    // ============================================================
-    agregarFilaProductoGuia();
-    
-    // ============================================================
-    // MOSTRAR MODAL
-    // ============================================================
-    modal.classList.add('show');
-    modal.style.cssText = `
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: 99999 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: rgba(15, 23, 42, 0.7) !important;
-        backdrop-filter: blur(6px) !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        padding: 20px !important;
-        overflow: auto !important;
-    `;
-    
-    const box = modal.querySelector('.modal-box');
-    if (box) {
-        box.style.cssText = `
-            position: relative !important;
-            z-index: 99999 !important;
-            width: min(1400px, 98vw) !important;
-            max-height: 95vh !important;
-            background: #FFFFFF !important;
-            border-radius: 16px !important;
-            overflow: hidden !important;
-            box-shadow: 0 30px 80px rgba(15,23,42,.35) !important;
-            display: flex !important;
-            flex-direction: column !important;
-            animation: modalIn 0.3s ease-out !important;
-        `;
+
+        // ---- VEHÍCULO Y CONDUCTOR (esto era lo que faltaba) ----
+        setValue('guiaPlaca', g.placa_vehiculo);
+        setValue('guiaConductorDNI', g.conductor_dni);
+        setValue('guiaConductorNombre', g.conductor_nombre);
+        setValue('guiaLicencia', g.licencia_conductor);
+
+        // ---- TRANSPORTISTA (solo aplica si modalidad = PUBLICO) ----
+        setValue('guiaTransportistaRUC', g.transportista_ruc);
+        setValue('guiaTransportistaNombre', g.transportista_nombre);
+        setValue('guiaTransportistaDireccion', g.transportista_direccion);
+
+        // ---- MOTIVO DE TRASLADO ----
+        setSelectValue('guiaMotivo', g.motivo_traslado);
+
+        // ---- FECHAS ----
+        // fecha_emision y fecha_traslado suelen venir como datetime/string desde la BD;
+        // los inputs son type="date", así que hay que recortarlos a YYYY-MM-DD.
+        const normalizarFecha = (valor) => {
+            if (!valor) return '';
+            const s = String(valor);
+            // admite "2026-08-19T00:00:00" o "2026-08-19 00:00:00" o "2026-08-19"
+            return s.slice(0, 10);
+        };
+        setValue('guiaFechaEmision', normalizarFecha(g.fecha_emision));
+        setValue('guiaFechaInicio', normalizarFecha(g.fecha_traslado));
+
+        // ---- PESO Y BULTOS ----
+        setValue('guiaPeso', g.peso_total);
+        setValue('guiaBultos', g.numero_bultos || 1);
+        setSelectValue('guiaUnidadPeso', g.unidad_peso_bruto || 'KGM');
+
+        // ---- DOCUMENTOS ADICIONALES ----
+        setValue('guiaOrdenCompra', g.orden_compra_cliente);
+        setValue('guiaFactura', g.factura);
+
+        // ---- DESTINATARIO: UBIGEO (departamento/provincia/distrito) ----
+        // Estos selects se llenan dinámicamente, así que hay que esperar a que
+        // las opciones existan antes de asignar el valor.
+        if (g.destinatario_departamento) {
+            setTimeout(() => {
+                const deptoSel = document.getElementById('guiaDeptoDestino');
+                if (deptoSel) {
+                    deptoSel.value = g.destinatario_departamento;
+                    deptoSel.dispatchEvent(new Event('change'));
+                    setTimeout(() => {
+                        const provSel = document.getElementById('guiaProvDestino');
+                        if (provSel && g.destinatario_provincia) {
+                            provSel.value = g.destinatario_provincia;
+                            provSel.dispatchEvent(new Event('change'));
+                            setTimeout(() => {
+                                const distSel = document.getElementById('guiaDistDestino');
+                                if (distSel && g.destinatario_distrito) {
+                                    distSel.value = g.destinatario_distrito;
+                                    distSel.dispatchEvent(new Event('change'));
+                                }
+                            }, 80);
+                        }
+                    }, 80);
+                }
+            }, 150);
+        }
+
+        // ============================================================
+        // SOBREESCRIBIR ORIGEN CON DATOS FIJOS
+        // ============================================================
+        const origenInput = document.getElementById('guiaOrigen');
+        if (origenInput) {
+            origenInput.value = ORIGEN_FIJO.direccion;
+            origenInput.readOnly = true;
+            origenInput.style.background = '#F1F5F9';
+            origenInput.style.color = '#64748B';
+            origenInput.style.cursor = 'not-allowed';
+        }
+
+        // RUC Remitente
+        const rucRemitente = document.getElementById('guiaRucRemitente');
+        if (rucRemitente) {
+            rucRemitente.value = ORIGEN_FIJO.ruc;
+            rucRemitente.readOnly = true;
+            rucRemitente.style.background = '#F1F5F9';
+            rucRemitente.style.color = '#64748B';
+        }
+
+        // Nombre Remitente
+        const nombreRemitente = document.getElementById('guiaRemitenteNombre');
+        if (nombreRemitente) {
+            nombreRemitente.value = ORIGEN_FIJO.nombre;
+            nombreRemitente.readOnly = true;
+            nombreRemitente.style.background = '#F1F5F9';
+            nombreRemitente.style.color = '#64748B';
+        }
+
+        // Ubigeo Origen
+        const deptoOrigen = document.getElementById('guiaDeptoOrigen');
+        if (deptoOrigen) {
+            deptoOrigen.value = ORIGEN_FIJO.departamento;
+            deptoOrigen.disabled = true;
+            deptoOrigen.style.background = '#F1F5F9';
+            deptoOrigen.style.cursor = 'not-allowed';
+        }
+
+        const provOrigen = document.getElementById('guiaProvOrigen');
+        if (provOrigen) {
+            provOrigen.value = ORIGEN_FIJO.provincia;
+            provOrigen.disabled = true;
+            provOrigen.style.background = '#F1F5F9';
+            provOrigen.style.cursor = 'not-allowed';
+        }
+
+        const distOrigen = document.getElementById('guiaDistOrigen');
+        if (distOrigen) {
+            distOrigen.value = ORIGEN_FIJO.distrito;
+            distOrigen.disabled = true;
+            distOrigen.style.background = '#F1F5F9';
+            distOrigen.style.cursor = 'not-allowed';
+        }
+
+        const ubigeoHidden = document.getElementById('guiaUbigeoOrigen');
+        if (ubigeoHidden) {
+            ubigeoHidden.value = ORIGEN_FIJO.ubigeo;
+        }
+
+        const ubigeoTexto = document.getElementById('guiaUbigeoOrigenTexto');
+        if (ubigeoTexto) {
+            ubigeoTexto.textContent = `${ORIGEN_FIJO.departamento} - ${ORIGEN_FIJO.provincia} - ${ORIGEN_FIJO.distrito}`;
+        }
+
+        // Cotización vinculada
+        if (g.documento_asociado) {
+            setSelectValue('guiaCotizacion', g.documento_asociado);
+        }
+
+        // ============================================================
+        // PRODUCTOS (items_json)
+        // ============================================================
+        let items = [];
+        try {
+            if (g.items_json) {
+                items = typeof g.items_json === 'string' ? JSON.parse(g.items_json) : g.items_json;
+            }
+        } catch (e) {
+            console.warn('⚠️ Error parseando items_json de la guía:', e);
+            items = [];
+        }
+
+        const productosNormalizados = (items || []).map(it => ({
+            codigo: it.codigo || '',
+            producto: it.producto || it.descripcion || '',
+            marca: it.marca || '',
+            modelo: it.modelo || '',
+            um: it.um || 'NIU',
+            cantidad: it.cantidad || 1,
+            stock: it.stock || 0
+        }));
+
+        const productsContainer = document.getElementById('guiaProducts');
+        if (productsContainer) {
+            productsContainer.innerHTML = productosNormalizados.length > 0
+                ? productTableHtml(productosNormalizados)
+                : '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos registrados en esta guía.</div>';
+        }
+
+        window._guiaProductos = productosNormalizados;
+
+        showToast('✅ Guía cargada correctamente', 'success');
+
+    } catch (error) {
+        console.error('❌ Error cargando guía para editar:', error);
+        showToast('Error al cargar la guía: ' + error.message, 'error');
     }
-    
-    // ============================================================
-    // 🔽 FIX: forzar que head/body/foot respeten el layout flex
-    //    y que el footer con los botones NUNCA se recorte
-    // ============================================================
-    const guiaHead = modal.querySelector('.modal-head');
-    const guiaBody = document.getElementById('guiaForm');
-    const guiaFoot = document.getElementById('guiaModalFooter');
-    
-    if (guiaHead) {
-        guiaHead.style.flexShrink = '0';
-    }
-    
-    if (guiaBody) {
-        guiaBody.style.cssText = `
-            flex: 1 1 auto;
-            min-height: 0;
-            overflow-y: auto;
-            padding: 10px 14px;
-            background: #F8FAFC;
-        `;
-    }
-    
-    if (guiaFoot) {
-        guiaFoot.style.cssText = `
-            flex-shrink: 0 !important;
-            display: flex !important;
-            padding: 6px 14px !important;
-            gap: 6px !important;
-            align-items: center !important;
-            justify-content: flex-end !important;
-            background: #FFFFFF !important;
-            border-top: 1px solid #E5E7EB !important;
-            flex-wrap: wrap !important;
-        `;
-    }
-    
-    if (isEdit) {
-        setTimeout(() => cargarGuiaParaEditar(id), 300);
-    }
-    
-    console.log('✅ Modal de guía abierto correctamente');
 }
 
 
