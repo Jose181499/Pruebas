@@ -8991,7 +8991,7 @@ async function openComprobanteModal(id = null) {
         setTimeout(() => cargarComprobanteParaEditar(id), 100);
     }
     
-    // 8. Mostrar modal - FORZADO CON CSS INLINE - z-index MÁS ALTO
+    // 8. Mostrar modal - FORZADO CON CSS INLINE - z-index MÁXIMO
     modal.classList.add('show');
     
     // 🔥 FORZAR VISIBILIDAD CON CSS INLINE - z-index MÁXIMO
@@ -9010,6 +9010,11 @@ async function openComprobanteModal(id = null) {
         overflow: auto !important;
     `;
     
+    // 🔽 🔽 🔽 FORZAR VISIBILIDAD INMEDIATA 🔽 🔽 🔽
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    
     // Asegurar que el modal-box sea visible
     const box = modal.querySelector('.modal-box');
     if (box) {
@@ -9025,6 +9030,8 @@ async function openComprobanteModal(id = null) {
             display: flex !important;
             flex-direction: column !important;
             animation: modalIn 0.3s ease-out !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         `;
     }
     
