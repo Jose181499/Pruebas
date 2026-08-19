@@ -8485,6 +8485,29 @@ function openGuiaModal(id = null) {
             animation: modalIn 0.3s ease-out !important;
         `;
     }
+
+
+    // 🔽 FORZAR EL FOOTER — esto es lo que falta
+    const footer = document.getElementById('guiaModalFooter');
+    if (footer) {
+        footer.style.cssText = `
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 6px !important;
+            padding: 6px 14px !important;
+            background: #FFFFFF !important;
+            border-top: 1px solid #E5E7EB !important;
+            flex-shrink: 0 !important;
+            flex-wrap: wrap !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 100000 !important;
+        `;
+    } else {
+        console.error('❌ #guiaModalFooter no encontrado en el DOM');
+    }
     
     
     if (isEdit) {
