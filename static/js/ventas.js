@@ -3908,6 +3908,11 @@ function openGuiaModalWithData(id, cotizacion) {
     }, 350);
 }
 
+function closeGuiaModal() {
+    closeModal('guiaModal');
+    window._guiaProductos = null;
+}
+
 // ============================================================
 // FUNCIÓN PARA ABRIR MODAL DE COMPROBANTE CON DATOS PRECARGADOS
 // ============================================================
@@ -4028,6 +4033,11 @@ async function openComprobanteModalWithData(id, cotizacion) {
     document.getElementById('comprobanteModal').classList.add('show');
 }
 
+function closeComprobanteModal() {
+    closeModal('comprobanteModal');
+    window._compProductos = null;
+}
+
 // ============================================================
 // FUNCIÓN PARA ABRIR MODAL DE DESPACHO CON DATOS PRECARGADOS
 // ============================================================
@@ -4106,6 +4116,10 @@ function openDespachoModalWithData(id, cotizacion) {
     
     window._despachoProductos = productos;
     document.getElementById('despachoModal').classList.add('show');
+}
+
+function closeDespachoModal() {
+    closeModal('despachoModal');
 }
 
 // ============================================================
@@ -7280,6 +7294,7 @@ let pcModalMode = 'cot';
 
 function openPedidoCompraModal(mode = 'cot') {
     pcModalMode = mode;
+    closeAllVentasModals();
     editingId = null;
     
     const isEdit = mode !== 'cot' && mode !== 'directo';
@@ -8107,6 +8122,7 @@ function productTableHtml(productos) {
 }
 
 function openDespachoModal(id = null) {
+    closeAllVentasModals();
     editingId = id;
     const isEdit = id !== null;
     const title = isEdit ? 'Editar despacho' : 'Nuevo despacho';
@@ -8199,6 +8215,7 @@ function openGuiaModal(id = null) {
     });
     
     console.log('📦 Abriendo modal de guía', { id });
+    closeAllVentasModals();
     editingId = id;
     const isEdit = id !== null;
     
@@ -8813,6 +8830,7 @@ async function cargarGuiaParaEditar(id) {
 
 async function openComprobanteModal(id = null) {
     console.log('🧾 Abriendo modal de comprobante', { id });
+    closeAllVentasModals();
     editingId = id;
     const isEdit = id !== null;
     
@@ -9079,6 +9097,7 @@ async function cargarComprobanteParaEditar(id) {
 
 
 function openNotaCreditoModal(id = null) {
+    closeAllVentasModals();
     editingId = id;
     const isEdit = id !== null;
     const title = isEdit ? 'Editar nota de crédito' : 'Nueva nota de crédito';
@@ -9151,6 +9170,10 @@ function openNotaCreditoModal(id = null) {
     if (isEdit) {
         setTimeout(() => cargarNotaCreditoParaEditar(id), 50);
     }
+}
+
+function closeNotaCreditoModal() {
+    closeModal('notaCreditoModal');
 }
 
 
@@ -9239,6 +9262,7 @@ async function cargarNotaCreditoParaEditar(id) {
 }
 
 function openDevolucionModal(id = null) {
+    closeAllVentasModals();
     editingId = id;
     const isEdit = id !== null;
     const title = isEdit ? 'Editar devolución' : 'Nueva devolución';
@@ -9300,6 +9324,10 @@ function openDevolucionModal(id = null) {
     `;
     
     document.getElementById('devolucionModal').classList.add('show');
+}
+
+function closeDevolucionModal() {
+    closeModal('devolucionModal');
 }
 
 
@@ -9631,6 +9659,7 @@ function clearDateFilter() {
 
 function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     console.log('📋 Abriendo modal PC:', { mode, id });
+    closeAllVentasModals();
     
     // ============================================================
     // ACTUALIZAR LA VARIABLE GLOBAL modalMode
@@ -9761,6 +9790,11 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
     setTimeout(() => {
         inicializarSwitchesValidacion();
     }, 200);
+}
+
+function closePedidoCompraModal() {
+    closeModal('pedidoCompraModal');
+    cotizacionSeleccionada = null;
 }
 
 
@@ -10995,6 +11029,7 @@ document.head.appendChild(stylePago);
 
 window.openCotizacionModal = function(id = null) {
     console.log('📋 Abriendo modal de cotización', { id });
+    closeAllVentasModals();
     editingId = id;
     const isEdit = id !== null;
     
@@ -12972,6 +13007,29 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('⚠️ initVentas no está disponible');
     }
 });
+
+
+
+
+// ============================================================
+// BLINDAJE: cerrar TODOS los modales antes de abrir uno nuevo
+// ============================================================
+function closeAllVentasModals() {
+    const modalIds = [
+        'cotizacionModal', 'pedidoCompraModal', 'despachoModal',
+        'guiaModal', 'comprobanteModal', 'notaCreditoModal',
+        'devolucionModal', 'productSelectorModal', 'productSelectorPcModal',
+        'productSelectorGuiaModal', 'nuevoConductorGuiaModal'
+    ];
+    modalIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('show');
+    });
+}
+window.closeAllVentasModals = closeAllVentasModals;
+
+
+
 // ============================================================
 // EXPORTAR TODAS LAS FUNCIONES AL WINDOW
 // ============================================================
@@ -13149,6 +13207,13 @@ window.getDescripcionPrincipal = getDescripcionPrincipal;
 window.badgeNuevo = badgeNuevo;
 
 window.getUltimoRegistroCreado = getUltimoRegistroCreado;
+
+window.closeGuiaModal = closeGuiaModal;
+window.closeComprobanteModal = closeComprobanteModal;
+window.closeDespachoModal = closeDespachoModal;
+window.closeNotaCreditoModal = closeNotaCreditoModal;
+window.closeDevolucionModal = closeDevolucionModal;
+window.closePedidoCompraModal = closePedidoCompraModal;
 // ============================================================
 // 14. FUNCIONES DE FORMATO
 // ============================================================
