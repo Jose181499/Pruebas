@@ -4418,54 +4418,9 @@ function actualizarObservacionesComprobante() {
     }
 }
 
-// ============================================================
-// CARGAR DATOS DEL COMPROBANTE DESDE UNA GUÍA SELECCIONADA
-// ============================================================
-window.loadComprobanteFromGuia = function(valorSeleccionado) {
-    if (!valorSeleccionado) {
-        actualizarObservacionesComprobante();
-        return;
-    }
 
-    const guia = guiasData.find(g => `${g.serie}-${g.numero}` === valorSeleccionado);
-    if (!guia) {
-        showToast('⚠️ Guía no encontrada', 'warning');
-        return;
-    }
 
-    // Autocompletar cliente/RUC solo si están vacíos (para no pisar datos ya cargados)
-    const compCliente = document.getElementById('compCliente');
-    const compRuc = document.getElementById('compRuc');
-    if (compCliente && !compCliente.value.trim()) compCliente.value = guia.cliente || '';
-    if (compRuc && !compRuc.value.trim()) compRuc.value = guia.ruc || '';
 
-    actualizarObservacionesComprobante();
-    showToast(`✅ Guía ${guia.serie}-${guia.numero} vinculada`, 'success');
-};
-
-// ============================================================
-// CARGAR DATOS DEL COMPROBANTE DESDE UN PC SELECCIONADO
-// ============================================================
-window.loadComprobanteFromPC = function(numeroPC) {
-    if (!numeroPC) {
-        actualizarObservacionesComprobante();
-        return;
-    }
-
-    const pc = pedidosData.find(p => p.numero === numeroPC);
-    if (!pc) {
-        showToast('⚠️ PC no encontrado', 'warning');
-        return;
-    }
-
-    const compCliente = document.getElementById('compCliente');
-    const compRuc = document.getElementById('compRuc');
-    if (compCliente && !compCliente.value.trim()) compCliente.value = pc.cliente || '';
-    if (compRuc && !compRuc.value.trim()) compRuc.value = pc.ruc || '';
-
-    actualizarObservacionesComprobante();
-    showToast(`✅ PC ${pc.numero} vinculado`, 'success');
-};
 
 function validatePedidoCompra(id) {
     // Buscar el PC para mostrar info
@@ -9160,7 +9115,7 @@ async function cargarProductosComprobanteDesdeCotizacion(numeroCotizacion) {
 }
 
 /**
- * Carga productos desde una guía seleccionada
+ * Carga datos desde una guía seleccionada
  */
 window.loadComprobanteFromGuia = function(valorSeleccionado) {
     if (!valorSeleccionado) {
@@ -9174,26 +9129,101 @@ window.loadComprobanteFromGuia = function(valorSeleccionado) {
         return;
     }
 
+    console.log('📦 Cargando guía:', guia);
+
     // Autocompletar cliente/RUC
     const compCliente = document.getElementById('compCliente');
     const compRuc = document.getElementById('compRuc');
     if (compCliente && !compCliente.value.trim()) compCliente.value = guia.cliente || '';
     if (compRuc && !compRuc.value.trim()) compRuc.value = guia.ruc || '';
 
-    // Si la guía tiene productos, cargarlos
+    // 🔽 CARGAR PRODUCTOS DE LA GUÍA 🔽
+    let productos = [];
+    
+    // Intentar obtener items de la guía
     if (guia.items && guia.items.length > 0) {
-        const productos = guia.items.map(item => ({
-            codigo: item.codigo || '',
-            producto: item.producto || item.descripcion || 'Sin nombre',
-            marca: item.marca || '',
-            modelo: item.modelo || '',
-            um: item.um || 'NIU',
-            cantidad: item.cantidad || 1,
-            valorVenta: item.valorVenta || 0
-        }));
+        productos = guia.items.map(item => {
+            // Normalizar item (puede ser objeto o array)
+            if (typeof item === 'object' && !Array.isArray(item)) {
+                return {
+                    codigo: item.codigo || '',
+                    producto: item.producto || item.descripcion || 'Sin nombre',
+                    marca: item.marca || '',
+                    modelo: item.modelo || '',
+                    um: item.um || 'NIU',
+                    cantidad: item.cantidad || 1,
+                    valorVenta: item.valorVenta || item.precio || 0
+                };
+            }
+            if (Array.isArray(item)) {
+                return {
+                    codigo: item[0] || '',
+                    producto: item[1] || 'Sin nombre',
+                    marca: item[2] || '',
+                    modelo: item[3] || '',
+                    um: 'NIU',
+                    cantidad: item[4] || 1,
+                    valorVenta: item[5] || 0
+                };
+            }
+            return null;
+        }).filter(p => p !== null);
+    }
+    
+    // Si no hay items en la guía, intentar buscar en items_json
+    if (productos.length === 0 && guia.items_json) {
+        try {
+            const itemsJson = typeof guia.items_json === 'string' ? JSON.parse(guia.items_json) : guia.items_json;
+            if (Array.isArray(itemsJson) && itemsJson.length > 0) {
+                productos = itemsJson.map(item => {
+                    if (typeof item === 'object' && !Array.isArray(item)) {
+                        return {
+                            codigo: item.codigo || '',
+                            producto: item.producto || item.descripcion || 'Sin nombre',
+                            marca: item.marca || '',
+                            modelo: item.modelo || '',
+                            um: item.um || 'NIU',
+                            cantidad: item.cantidad || 1,
+                            valorVenta: item.valorVenta || item.precio || 0
+                        };
+                    }
+                    if (Array.isArray(item)) {
+                        return {
+                            codigo: item[0] || '',
+                            producto: item[1] || 'Sin nombre',
+                            marca: item[2] || '',
+                            modelo: item[3] || '',
+                            um: 'NIU',
+                            cantidad: item[4] || 1,
+                            valorVenta: item[5] || 0
+                        };
+                    }
+                    return null;
+                }).filter(p => p !== null);
+            }
+        } catch (e) {
+            console.warn('⚠️ Error parseando items_json:', e);
+        }
+    }
+
+    // Si hay productos, mostrarlos
+    if (productos.length > 0) {
         window._compProductos = productos;
         renderProductosComprobante(productos);
+        
+        // Actualizar monto total
+        const total = productos.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.valorVenta || 0) * 1.18), 0);
+        document.getElementById('compMonto').value = total.toFixed(2);
+        
         showToast(`✅ ${productos.length} productos cargados desde guía`, 'success');
+    } else {
+        // Si no hay productos, mostrar mensaje
+        document.getElementById('compProducts').innerHTML = `
+            <div style="padding:20px;text-align:center;color:#94A3B8;">
+                📭 Esta guía no tiene productos asociados.
+            </div>
+        `;
+        showToast('⚠️ Esta guía no tiene productos', 'warning');
     }
 
     actualizarObservacionesComprobante();
@@ -9201,7 +9231,7 @@ window.loadComprobanteFromGuia = function(valorSeleccionado) {
 };
 
 /**
- * Carga productos desde un PC seleccionado
+ * Carga datos desde un PC seleccionado
  */
 window.loadComprobanteFromPC = function(numeroPC) {
     if (!numeroPC) {
@@ -9215,14 +9245,20 @@ window.loadComprobanteFromPC = function(numeroPC) {
         return;
     }
 
+    console.log('📦 Cargando PC:', pc);
+
+    // Autocompletar cliente/RUC
     const compCliente = document.getElementById('compCliente');
     const compRuc = document.getElementById('compRuc');
     if (compCliente && !compCliente.value.trim()) compCliente.value = pc.cliente || '';
     if (compRuc && !compRuc.value.trim()) compRuc.value = pc.ruc || '';
 
-    // Si el PC tiene productos, cargarlos
+    // 🔽 CARGAR PRODUCTOS DEL PC 🔽
+    let productos = [];
+    
+    // Intentar obtener items del PC
     if (pc.items && pc.items.length > 0) {
-        const productos = pc.items.map(item => {
+        productos = pc.items.map(item => {
             // Normalizar item (puede ser objeto o array)
             if (typeof item === 'object' && !Array.isArray(item)) {
                 return {
@@ -9248,10 +9284,62 @@ window.loadComprobanteFromPC = function(numeroPC) {
             }
             return null;
         }).filter(p => p !== null);
-        
+    }
+    
+    // Si no hay items, intentar buscar en items_json
+    if (productos.length === 0 && pc.items_json) {
+        try {
+            const itemsJson = typeof pc.items_json === 'string' ? JSON.parse(pc.items_json) : pc.items_json;
+            if (Array.isArray(itemsJson) && itemsJson.length > 0) {
+                productos = itemsJson.map(item => {
+                    if (typeof item === 'object' && !Array.isArray(item)) {
+                        return {
+                            codigo: item.codigo || '',
+                            producto: item.producto || item.descripcion || 'Sin nombre',
+                            marca: item.marca || '',
+                            modelo: item.modelo || '',
+                            um: item.um || 'NIU',
+                            cantidad: item.cantidad_pc || item.cantidad || 1,
+                            valorVenta: item.precio_pc || item.precio || 0
+                        };
+                    }
+                    if (Array.isArray(item)) {
+                        return {
+                            codigo: item[0] || '',
+                            producto: item[1] || 'Sin nombre',
+                            marca: item[2] || '',
+                            modelo: item[3] || '',
+                            um: 'NIU',
+                            cantidad: item[5] || 1,
+                            valorVenta: item[7] || 0
+                        };
+                    }
+                    return null;
+                }).filter(p => p !== null);
+            }
+        } catch (e) {
+            console.warn('⚠️ Error parseando items_json:', e);
+        }
+    }
+
+    // Si hay productos, mostrarlos
+    if (productos.length > 0) {
         window._compProductos = productos;
         renderProductosComprobante(productos);
+        
+        // Actualizar monto total
+        const total = productos.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.valorVenta || 0) * 1.18), 0);
+        document.getElementById('compMonto').value = total.toFixed(2);
+        
         showToast(`✅ ${productos.length} productos cargados desde PC`, 'success');
+    } else {
+        // Si no hay productos, mostrar mensaje
+        document.getElementById('compProducts').innerHTML = `
+            <div style="padding:20px;text-align:center;color:#94A3B8;">
+                📭 Este PC no tiene productos asociados.
+            </div>
+        `;
+        showToast('⚠️ Este PC no tiene productos', 'warning');
     }
 
     actualizarObservacionesComprobante();
