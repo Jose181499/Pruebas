@@ -8488,7 +8488,7 @@ function openGuiaModal(id = null) {
 
 
     // 🔽 FORZAR EL FOOTER — esto es lo que falta
-    const footer = document.getElementById('guiaModalFooter');
+    const footer = modal.querySelector('.modal-foot');
     if (footer) {
         footer.style.cssText = `
             display: flex !important;
