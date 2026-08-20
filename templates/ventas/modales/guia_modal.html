@@ -12,7 +12,9 @@
             <button class="btn btn-secondary" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 14px;min-height:28px;border-radius:20px;font-size:11px;cursor:pointer;" onclick="closeModal('guiaModal')">✕ Cerrar</button>
         </div>
         
-        <!-- BODY -->
+        <!-- ============================================================ -->
+        <!-- BODY - SOLO EL CONTENIDO DEL FORMULARIO (SIN FOOTER)         -->
+        <!-- ============================================================ -->
         <div class="modal-body" id="guiaForm" style="flex:1 1 auto; overflow-y:auto; padding:10px 14px; background:#F8FAFC; ">
             
             <!-- ============================================================ -->
@@ -20,60 +22,58 @@
             <!-- ============================================================ -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
                 
-               
                 <!-- REMITENTE -->
-<div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
-    <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#2563EB; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-        <span><i class="bi bi-building"></i> Remitente (Origen)</span>
-        <small style="color:#64748B; font-weight:700; font-size:8px;">🔒 Fijo</small>
-    </div>
-    <div style="padding:6px 10px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
-            <div class="form-field">
-                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
-                <input id="guiaRucRemitente" value="20602095704" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-            </div>
-            <div class="form-field">
-                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cód. Anexo</label>
-                <input id="guiaRemitenteAnexo" value="0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-            </div>
-        </div>
-        <div class="form-field" style="margin-bottom:2px;">
-            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
-            <input id="guiaRemitenteNombre" value="KCF CORPORACION SAC" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-        </div>
-        <div class="form-field" style="margin-bottom:2px;">
-            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Partida <span class="text-danger">*</span></label>
-            <!-- 🔽 AQUÍ ES DONDE SE PONE LA DIRECCIÓN FIJA -->
-            <input id="guiaOrigen" value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
-        </div>
-        <!-- Ubigeo Remitente - PRESELECCIONADO -->
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
-            <div class="form-field">
-                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
-                <select class="ubigeo-select" id="guiaDeptoOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
-                    <option value="LIMA" selected>LIMA</option>
-                </select>
-            </div>
-            <div class="form-field">
-                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Provincia</label>
-                <select class="ubigeo-select" id="guiaProvOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
-                    <option value="LIMA" selected>LIMA</option>
-                </select>
-            </div>
-            <div class="form-field">
-                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Distrito</label>
-                <select class="ubigeo-select" id="guiaDistOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
-                    <option value="SAN MARTIN DE PORRES" selected>SAN MARTIN DE PORRES</option>
-                </select>
-            </div>
-        </div>
-        <div style="font-size:7px; color:#64748B; margin-top:2px;">
-            <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoOrigenTexto">LIMA - LIMA - SAN MARTIN DE PORRES</span>
-            <input type="hidden" id="guiaUbigeoOrigen" value="150139">
-        </div>
-    </div>
-</div>
+                <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
+                    <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#2563EB; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="bi bi-building"></i> Remitente (Origen)</span>
+                        <small style="color:#64748B; font-weight:700; font-size:8px;">🔒 Fijo</small>
+                    </div>
+                    <div style="padding:6px 10px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
+                            <div class="form-field">
+                                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC</label>
+                                <input id="guiaRucRemitente" value="20602095704" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+                            </div>
+                            <div class="form-field">
+                                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Cód. Anexo</label>
+                                <input id="guiaRemitenteAnexo" value="0001" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                            </div>
+                        </div>
+                        <div class="form-field" style="margin-bottom:2px;">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Razón Social</label>
+                            <input id="guiaRemitenteNombre" value="KCF CORPORACION SAC" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+                        </div>
+                        <div class="form-field" style="margin-bottom:2px;">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Dirección de Partida <span class="text-danger">*</span></label>
+                            <input id="guiaOrigen" value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES" readonly style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#F1F5F9; font-size:9px; padding:0 6px; color:#64748B; cursor:not-allowed;">
+                        </div>
+                        <!-- Ubigeo Remitente - PRESELECCIONADO -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
+                            <div class="form-field">
+                                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Departamento</label>
+                                <select class="ubigeo-select" id="guiaDeptoOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                                    <option value="LIMA" selected>LIMA</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Provincia</label>
+                                <select class="ubigeo-select" id="guiaProvOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                                    <option value="LIMA" selected>LIMA</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label style="font-size:6.5px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Distrito</label>
+                                <select class="ubigeo-select" id="guiaDistOrigen" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#F1F5F9; cursor:not-allowed;">
+                                    <option value="SAN MARTIN DE PORRES" selected>SAN MARTIN DE PORRES</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="font-size:7px; color:#64748B; margin-top:2px;">
+                            <i class="bi bi-geo-alt-fill" style="color:#2563EB;"></i> Ubigeo: <span id="guiaUbigeoOrigenTexto">LIMA - LIMA - SAN MARTIN DE PORRES</span>
+                            <input type="hidden" id="guiaUbigeoOrigen" value="150139">
+                        </div>
+                    </div>
+                </div>
 
                 <!-- DESTINATARIO -->
                 <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
@@ -234,65 +234,131 @@
             </div>
             
             <!-- ============================================================ -->
-<!-- FILA 3: TRASLADO -->
-<!-- ============================================================ -->
-<div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
-    <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#7C3AED; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
-        <span><i class="bi bi-file-text"></i> Datos del Traslado</span>
-        <small style="color:#64748B; font-weight:700; font-size:8px;">Campos SUNAT</small>
-    </div>
-    <div style="padding:6px 10px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
-            <!-- Motivo, Fecha Emisión, Fecha Inicio, N° Bultos -->
-            <div class="form-field">
-                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Motivo <span class="text-danger">*</span></label>
-                <select id="guiaMotivo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                    <!-- opciones... -->
-                </select>
+            <!-- FILA 3: TRASLADO -->
+            <!-- ============================================================ -->
+            <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden; margin-bottom:8px;">
+                <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#7C3AED; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="bi bi-file-text"></i> Datos del Traslado</span>
+                    <small style="color:#64748B; font-weight:700; font-size:8px;">Campos SUNAT</small>
+                </div>
+                <div style="padding:6px 10px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:2px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Motivo <span class="text-danger">*</span></label>
+                            <select id="guiaMotivo" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                                <option value="VENTA">VENTA</option>
+                                <option value="COMPRA">COMPRA</option>
+                                <option value="TRANSFERENCIA ENTRE ALMACENES">TRANSFERENCIA ENTRE ALMACENES</option>
+                                <option value="DEVOLUCIÓN">DEVOLUCIÓN</option>
+                                <option value="CONSIGNACIÓN">CONSIGNACIÓN</option>
+                                <option value="OTRO">OTRO</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Emisión</label>
+                            <input id="guiaFechaEmision" type="date" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Inicio <span class="text-danger">*</span></label>
+                            <input id="guiaFechaInicio" type="date" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Bultos <span class="text-danger">*</span></label>
+                            <input id="guiaBultos" type="number" value="1" min="0" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:2px;">
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto <span class="text-danger">*</span></label>
+                            <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
+                                <option value="">Cargando...</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Peso Bruto Total <span class="text-danger">*</span></label>
+                            <input id="guiaPeso" type="number" step="0.01" value="0.00" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-field" style="margin-top:4px;">
+                        <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Observaciones</label>
+                        <textarea id="guiaObservaciones" rows="1" placeholder="Notas adicionales..." style="width:100%; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:4px 6px; resize:vertical; min-height:24px;"></textarea>
+                    </div>
+                </div>
             </div>
-            <div class="form-field">
-                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Emisión</label>
-                <input id="guiaFechaEmision" type="date" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-            </div>
-            <div class="form-field">
-                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Fecha Inicio <span class="text-danger">*</span></label>
-                <input id="guiaFechaInicio" type="date" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-            </div>
-            <div class="form-field">
-                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">N° Bultos <span class="text-danger">*</span></label>
-                <input id="guiaBultos" type="number" value="1" min="0" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-            </div>
-        </div>
+
+        </div> <!-- FIN DEL MODAL-BODY -->
         
-        <!-- 🔽 AQUÍ ESTÁ EL PROBLEMA - AGREGAR EL CAMPO guiaPeso -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:2px;">
-            <!-- UNIDAD PESO BRUTO (select) -->
-            <div class="form-field">
-                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Unidad Peso Bruto <span class="text-danger">*</span></label>
-                <select id="guiaUnidadPeso" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; font-size:8px; padding:0 4px; background:#FFFFFF;">
-                    <option value="">Cargando...</option>
-                </select>
-            </div>
+        <!-- ============================================================ -->
+        <!-- FOOTER - FUERA DEL BODY, SIEMPRE VISIBLE                      -->
+        <!-- ============================================================ -->
+        <div class="modal-foot" id="guiaModalFooter" style="
+            padding:6px 14px; 
+            gap:6px; 
+            display:flex !important; 
+            align-items:center; 
+            justify-content:flex-end; 
+            flex-shrink:0; 
+            background:#FFFFFF; 
+            border-top:2px solid #E5E7EB; 
+            flex-wrap:wrap;
+            min-height:44px;
+            visibility:visible !important;
+            opacity:1 !important;
+            position:relative !important;
+            z-index:10 !important;
+        ">
+            <button class="btn btn-secondary" onclick="closeModal('guiaModal')" style="
+                height:30px; 
+                padding:0 16px; 
+                font-size:11px; 
+                border-radius:6px; 
+                background:#94A3B8; 
+                color:#fff; 
+                border:1px solid #CBD5E1; 
+                font-weight:700; 
+                cursor:pointer;
+            ">Cancelar</button>
             
-            <!-- 🔽 AGREGAR ESTE CAMPO - PESO BRUTO TOTAL -->
-            <div class="form-field">
-                <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Peso Bruto Total <span class="text-danger">*</span></label>
-                <input id="guiaPeso" type="number" step="0.01" value="0.00" style="width:100%; height:20px; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:0 6px;">
-            </div>
-        </div>
-        
-        <!-- OBSERVACIONES -->
-        <div class="form-field" style="margin-top:4px;">
-            <label style="font-size:7px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Observaciones</label>
-            <textarea id="guiaObservaciones" rows="1" placeholder="Notas adicionales..." style="width:100%; border:1px solid #E5E7EB; border-radius:4px; background:#FFFFFF; font-size:9px; padding:4px 6px; resize:vertical; min-height:24px;"></textarea>
-        </div>
-    </div>
-</div>
-        <!-- FOOTER -->
-        <div class="modal-foot" id="guiaModalFooter" style="padding:6px 14px; gap:6px; display:flex; align-items:center; justify-content:flex-end; flex-shrink:0; background:#FFFFFF; border-top:1px solid #E5E7EB; flex-wrap:wrap;">
-            <button class="btn btn-secondary" onclick="closeModal('guiaModal')" style="height:28px; padding:0 14px; font-size:11px; border-radius:6px; background:#94A3B8; color:#fff; border:1px solid #CBD5E1; font-weight:700; cursor:pointer;">Cancelar</button>
-            <button class="btn btn-warning" onclick="saveGuia('Borrador')" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:1px solid #FF8C00; background:#FF8C00; color:#fff; font-weight:900; cursor:pointer; box-shadow:0 0 15px rgba(255,140,0,0.3);">💾 Guardar Borrador</button>
-            <button class="btn btn-primary" onclick="enviarGuiaSunat()" style="height:28px; padding:0 14px; font-size:10px; border-radius:6px; border:1px solid #2563EB; background:#2563EB; color:#fff; font-weight:900; cursor:pointer; box-shadow:0 0 15px rgba(37,99,235,0.3);">📤 Enviar a SUNAT</button>
+            <button class="btn btn-warning" onclick="saveGuia('Borrador')" style="
+                height:30px; 
+                padding:0 16px; 
+                font-size:10px; 
+                border-radius:6px; 
+                border:1px solid #FF8C00; 
+                background:#FF8C00; 
+                color:#fff; 
+                font-weight:900; 
+                cursor:pointer; 
+                box-shadow:0 0 15px rgba(255,140,0,0.3);
+            ">💾 Guardar Borrador</button>
+            
+            <button class="btn btn-primary" onclick="enviarGuiaSunat()" style="
+                height:30px; 
+                padding:0 16px; 
+                font-size:10px; 
+                border-radius:6px; 
+                border:1px solid #2563EB; 
+                background:#2563EB; 
+                color:#fff; 
+                font-weight:900; 
+                cursor:pointer; 
+                box-shadow:0 0 15px rgba(37,99,235,0.3);
+            ">📤 Enviar a SUNAT</button>
+            
+            <button class="btn btn-success" onclick="saveGuia('Emitida')" style="
+                height:30px; 
+                padding:0 16px; 
+                font-size:10px; 
+                border-radius:6px; 
+                border:1px solid #16A34A; 
+                background:#16A34A; 
+                color:#fff; 
+                font-weight:900; 
+                cursor:pointer; 
+                box-shadow:0 0 15px rgba(22,163,74,0.3);
+            ">📄 Emitir Guía</button>
         </div>
         
     </div>
@@ -305,37 +371,39 @@
     <div class="modal-box" style="width:min(500px,96vw); max-height:80vh;">
         <div class="modal-head" style="padding:8px 14px; min-height:34px; background:#0F172A;">
             <div class="modal-title" style="font-weight:600; font-size:1rem; color:#fff; margin:0;">👤 Nuevo Conductor</div>
-        <button class="btn btn-secondary" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 14px;min-height:28px;border-radius:20px;font-size:11px;cursor:pointer;" onclick="window.closeGuiaModal()">✕ Cerrar</button>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <button class="btn btn-secondary" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 14px;min-height:28px;border-radius:20px;font-size:11px;cursor:pointer;" onclick="closeModal('nuevoConductorGuiaModal')">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:12px 16px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                 <div class="form-field">
                     <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">DNI <span class="text-danger">*</span></label>
-                    <input id="nuevoConductorGuiaDNI" placeholder="DNI" maxlength="8" style="width:100%; height:26px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:10px;">
+                    <input id="nuevoConductorGuiaDNI" placeholder="DNI" maxlength="8" style="width:100%; height:30px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:11px;">
                 </div>
                 <div class="form-field">
                     <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Nombres <span class="text-danger">*</span></label>
-                    <input id="nuevoConductorGuiaNombre" placeholder="Nombre completo" style="width:100%; height:26px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:10px;">
+                    <input id="nuevoConductorGuiaNombre" placeholder="Nombre completo" style="width:100%; height:30px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:11px;">
                 </div>
                 <div class="form-field">
                     <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Placa <span class="text-danger">*</span></label>
-                    <input id="nuevoConductorGuiaPlaca" placeholder="ABC-123" style="width:100%; height:26px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:10px; text-transform:uppercase;">
+                    <input id="nuevoConductorGuiaPlaca" placeholder="ABC-123" style="width:100%; height:30px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:11px; text-transform:uppercase;">
                 </div>
                 <div class="form-field">
                     <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Licencia</label>
-                    <input id="nuevoConductorGuiaLicencia" placeholder="N° Licencia" style="width:100%; height:26px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:10px;">
+                    <input id="nuevoConductorGuiaLicencia" placeholder="N° Licencia" style="width:100%; height:30px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:11px;">
                 </div>
                 <div class="form-field">
                     <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Teléfono</label>
-                    <input id="nuevoConductorGuiaTelefono" placeholder="Teléfono" style="width:100%; height:26px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:10px;">
+                    <input id="nuevoConductorGuiaTelefono" placeholder="Teléfono" style="width:100%; height:30px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:11px;">
                 </div>
                 <div class="form-field">
                     <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">RUC Empresa</label>
-                    <input id="nuevoConductorGuiaRUC" placeholder="RUC" style="width:100%; height:26px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:10px;">
+                    <input id="nuevoConductorGuiaRUC" placeholder="RUC" style="width:100%; height:30px; border:1px solid #CBD5E1; border-radius:4px; padding:0 8px; font-size:11px;">
                 </div>
             </div>
         </div>
-        <div class="modal-foot" style="padding:6px 14px; display:flex; gap:6px; justify-content:flex-end; border-top:1px solid #E5E7EB; background:#F8FAFC;">
-            <button class="btn btn-secondary" onclick="closeModal('nuevoConductorGuiaModal')" style="height:26px; padding:0 14px; font-size:10px; border-radius:4px; background:#94A3B8; color:#fff; border:0; font-weight:700; cursor:pointer;">Cancelar</button>
-            <button class="btn btn-primary" onclick="guardarNuevoConductorGuia()" style="height:26px; padding:0 14px; font-size:10px; border-radius:4px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer;">💾 Guardar Conductor</button>
+        <div class="modal-foot" style="padding:6px 14px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid #E5E7EB; background:#F8FAFC;">
+            <button class="btn btn-secondary" onclick="closeModal('nuevoConductorGuiaModal')" style="height:30px; padding:0 18px; font-size:11px; border-radius:6px; background:#94A3B8; color:#fff; border:0; font-weight:700; cursor:pointer;">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarNuevoConductorGuia()" style="height:30px; padding:0 18px; font-size:11px; border-radius:6px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer;">💾 Guardar Conductor</button>
         </div>
     </div>
 </div>
